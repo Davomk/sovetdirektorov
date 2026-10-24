@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Совет директоров Stels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: horizontal mind map (root → agenda items → role/tasks/steps/questions → leaves); on narrow screens the same tree becomes an indented outline. */
+:root {
+  --bg: #F1F4F6; --surface: #FFFFFF; --ink: #15212A; --muted: #566772; --line: #CBD5DB; --onc: #FFFFFF;
+  --c1: #2563C9; --c2: #0B7A6F; --c3: #357A1A; --c4: #8A6200; --c5: #BF4A10;
+  --c6: #C93A3A; --c7: #A93389; --c8: #6A47D1; --c9: #4F6B80;
+  --f-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --f-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171C; --surface: #19222A; --ink: #E8EDF0; --muted: #95A5B0; --line: #33434E; --onc: #0E1317;
+    --c1: #74A4F4; --c2: #43C4B3; --c3: #82CC60; --c4: #E3B53A; --c5: #F28F56;
+    --c6: #F47878; --c7: #DB72BC; --c8: #AA92F6; --c9: #92AABD;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171C; --surface: #19222A; --ink: #E8EDF0; --muted: #95A5B0; --line: #33434E; --onc: #0E1317;
+  --c1: #74A4F4; --c2: #43C4B3; --c3: #82CC60; --c4: #E3B53A; --c5: #F28F56;
+  --c6: #F47878; --c7: #DB72BC; --c8: #AA92F6; --c9: #92AABD;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.page { max-width: 1160px; margin: 0 auto; }
+.kicker { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(26px, 5vw, 38px); line-height: 1.15; margin: 0 0 12px; text-wrap: balance; }
+.lede { max-width: 66ch; color: var(--muted); margin: 0 0 22px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+button { font: inherit; color: inherit; }
+.btn { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--c); border-radius: 999px; padding: 4px 12px 4px 4px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.chip b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--c); color: var(--onc); font-size: 11.5px; font-weight: 700; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+.mapwrap { overflow-x: auto; padding-bottom: 8px; }
+.map { --c: var(--muted); width: max-content; min-width: 100%; }
+ul { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; align-items: center; }
+.node { position: relative; flex: none; }
+.kids { margin-left: 18px; padding-left: 18px; display: flex; flex-direction: column; }
+.kid { position: relative; padding-block: var(--pad, 5px); }
+.kid::before { content: ""; position: absolute; left: -18px; top: 50%; width: 18px; height: 2px; margin-top: -1px; background: var(--c); }
+.kid::after { content: ""; position: absolute; left: -18px; top: 0; bottom: 0; width: 2px; background: var(--c); }
+.kid:first-child::after { top: 50%; }
+.kid:last-child::after { bottom: 50%; }
+.kid:only-child::after { display: none; }
+.has-kids > .node::after { content: ""; position: absolute; left: 100%; top: 50%; width: 18px; height: 2px; margin-top: -1px; background: var(--c); }
+.is-closed > .row > .kids { display: none; }
+.is-closed > .row > .node::after { display: none; }
+
+.rootnode { width: 200px; padding: 18px; border-radius: 20px; background: var(--ink); color: var(--bg); }
+.rootnode strong { display: block; font-family: var(--f-display); font-weight: 600; font-size: 17px; line-height: 1.25; margin-bottom: 8px; }
+.rootnode span { font-size: 12.5px; opacity: .8; }
+
+.topic { padding-block: 14px; scroll-margin-top: 12px; }
+.tnode { width: 270px; display: flex; align-items: flex-start; gap: 10px; text-align: left; background: var(--surface); border: 2px solid var(--c); border-radius: 14px; padding: 10px 12px; cursor: pointer; }
+.num { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--c); color: var(--onc); font-family: var(--f-display); font-weight: 600; font-size: 12px; }
+.ttext { flex: 1; min-width: 0; }
+.ttext strong { display: block; font-size: 15px; line-height: 1.25; font-weight: 600; }
+.ttext small { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.chev { flex: none; width: 8px; height: 8px; margin: 9px 2px 0 0; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
+.is-closed > .row > .tnode .chev, .is-closed > .row > .gnode .chev { transform: rotate(45deg); }
+.topic:not(.is-closed) > .row > .tnode .chev { transform: rotate(-45deg); }
+
+.gnode { width: 142px; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: var(--c); color: var(--onc); border: 0; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
+.gnode .chev { border-color: var(--onc); margin: 0 2px 0 0; width: 7px; height: 7px; }
+.gnode i { font-style: normal; opacity: .85; font-weight: 600; margin-left: auto; margin-right: 4px; }
+.group { --pad: 8px; }
+
+.lnode { width: 380px; padding: 8px 12px; border-radius: 10px; font-size: 14px; line-height: 1.45; background: color-mix(in srgb, var(--c) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+
+
+@media (max-width: 1099px) {
+  .mapwrap { overflow-x: visible; }
+  .map { width: auto; }
+  .row { flex-direction: column; align-items: stretch; }
+  .node { flex: none; }
+  .kids { margin: 6px 0 0 12px; padding-left: 16px; border-left: 2px solid var(--c); }
+  .kid::before { left: -16px; width: 16px; top: 22px; margin-top: 0; }
+  .kid::after { display: none; }
+  .has-kids > .node::after { display: none; }
+  .rootnode { width: auto; max-width: 440px; }
+  .tnode { width: 100%; max-width: 440px; }
+  .gnode { width: 150px; }
+  .lnode { width: auto; max-width: 480px; }
+  .topic { padding-block: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="kicker">Стратегическое планирование рекламы · самостоятельная работа</p>
+  <h1>Совет директоров Stels</h1>
+  <p class="lede">Ментальная карта начальника отдела рекламы и PR. В каждом из девяти пунктов повестки: моя роль, задачи, шаги и до трёх вопросов участникам совещания. Нажмите на ветку, чтобы свернуть её.</p>
+  <div class="controls">
+    <button class="btn" id="expandAll" type="button">Развернуть всё</button>
+    <button class="btn" id="collapseAll" type="button">Свернуть до пунктов повестки</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="mapwrap"><div class="map" id="map"></div></div>
+
+</div>
+
+<script>
+var DATA = [
+  { n: 1, short: "Самокат", title: "Запуск электросамоката", sub: "Дистрибьюторская сеть и программа продвижения, запуск через 3 месяца",
+    role: ["Я пишу программу продвижения и слежу, чтобы к дню запуска дистрибьюторы знали, что и как продавать."],
+    tasks: ["Придумать, чем самокат Stels лучше других, и уложить это в одну фразу", "Расписать 12 недель до запуска: интрига, анонс, старт, поддержка продаж", "Снабдить дистрибьюторов материалами и научить их продавцов", "Договориться о бюджете и о том, по каким цифрам будем судить об успехе"],
+    steps: ["Недели 1–2: сажусь с маркетингом и исследователями, делаем концепцию и проверяем её на живых людях", "Недели 3–6: тизеры, анонс в СМИ, тест-драйвы для блогеров и журналистов, лист ожидания", "Недели 5–9: готовлю для дилеров всё для торгового зала (стойки, каталоги, скрипты продаж), провожу вебинары для продавцов", "Недели 10–12: пресс-показ, реклама, соцсети и акции в магазинах", "Заранее собираю ответы на вопросы о безопасности: аккумулятор, правила езды, гарантия", "После старта сверяю цифры с планом и меняю каналы, которые не работают"],
+    q: ["Маркетингу и исследователям: кто наш покупатель, с кем мы конкурируем и что в самокате реально выигрывает?", "Финансовому директору: сколько денег у нас есть и какие цифры продаж считаем успехом?", "Начальнику отдела сбыта: какие условия предлагаем дистрибьюторам и когда они получат товар?"] },
+  { n: 2, short: "Отзыв партии", title: "Отзыв бракованной партии", sub: "Продукция, выпущенная в декабре прошлого года",
+    role: ["Отвечаю за то, чтобы владельцы бракованных изделий узнали о проблеме от нас, быстро и без недомолвок."],
+    tasks: ["Достучаться до каждого владельца, пока никто не пострадал", "Сохранить доверие: люди должны увидеть, что нас волнуют они, а не репутация", "Добиться, чтобы сайт, дилеры, горячая линия и СМИ говорили одно и то же", "Не дать другим рассказать о проблеме раньше нас"],
+    steps: ["Узнаю у производства и юристов, в чём дефект, какие серийные номера, сколько изделий и где они проданы", "Согласовываю, что получает клиент: замену, ремонт или деньги, и в какие сроки", "Собираю пакет: релиз, страница на сайте с проверкой по серийному номеру, ответы на частые вопросы, скрипты для горячей линии и дилеров", "Рассылаю информацию везде: сайт, соцсети, дилеры, маркетплейсы, письма и звонки владельцам", "Каждый день смотрю отклики и публикую, сколько изделий уже заменили", "В конце рассказываю, что изменили в контроле качества, чтобы это не повторилось"],
+    q: ["Директору по производству: что именно сломано, какие партии и сколько штук, насколько это опасно?", "Начальнику правового департамента: кого и в какие сроки мы обязаны уведомить по закону о защите прав потребителей?", "Начальнику отдела транспорта и логистики: как будем забирать и менять изделия и кто за это платит?"] },
+  { n: 3, short: "Интервью", title: "Интервью генерального директора", sub: "Один из центральных телеканалов",
+    role: ["Готовлю генерального директора к эфиру: выбираю главные мысли, договариваюсь с редакцией и репетирую с ним."],
+    tasks: ["Использовать эфир, чтобы показать компанию с лучшей стороны, а не оправдываться", "Подготовить директора к неудобным вопросам: пожар, брак, эндорсер, иск", "Не дать прозвучать в эфире тому, что юристы и финансисты не согласовали"],
+    steps: ["Выясняю у канала формат, время в эфире, ведущего, темы и будет ли прямой эфир", "Выбираю три главные мысли и подкрепляю их цифрами и примерами", "Составляю список острых вопросов и заранее продумываю ответы", "Тренирую директора на камеру, потом разбираем запись вместе", "Продумываю день эфира: кто сопровождает, во что одет, когда приезжает", "После эфира нарезаю удачные фрагменты для соцсетей и смотрю, как отреагировали"],
+    q: ["Генеральному директору: чего вы хотите от этого интервью и о чём говорить не готовы?", "Помощнику генерального директора: когда эфир, в каком формате, кто ведущий и можно ли согласовать вопросы заранее?", "Начальнику правового департамента: о чём нельзя говорить публично, пока идёт разбирательство по пожару, браку и иску?"] },
+  { n: 4, short: "Пожар", title: "Пожар на заводе", sub: "Около 15 обратившихся в больницу, сгоревшие автомобили на парковке",
+    role: ["Руковожу кризисными коммуникациями: создаю пресс-центр, держу единую версию фактов и готовлю спикера."],
+    tasks: ["В первые часы дать людям проверенные факты, пока их не заменили слухи", "Показать, что нам не всё равно: пострадавшие, сотрудники, жители", "Не гадать о причинах и не искать виноватых до заключения специалистов", "Заранее решить, как поступаем с компенсациями, в том числе для владельцев сгоревших машин"],
+    steps: ["В первый час: собираю штаб, назначаю спикера, выясняю у производства и спасательных служб, что известно точно", "В течение двух часов выпускаю короткое заявление: что случилось, как помогаем, куда звонить. Версий причин там нет", "Связываюсь с пострадавшими и их семьями, руководство едет в больницу, пишу обращение к сотрудникам", "Предупреждаю дилеров и партнёров, что возможны задержки поставок", "Объявляю условия компенсаций после согласования с юристами и финансистами", "Обновляю информацию по расписанию, слежу за СМИ и опровергаю фейки", "Когда причина будет установлена, рассказываю о ней и о том, как усилим безопасность"],
+    q: ["Директору по производству: сколько людей пострадало, как они себя чувствуют, остановлен ли завод и что с отгрузками?", "Начальнику правового департамента: что можно говорить публично, пока идёт проверка, и за что мы отвечаем (люди, машины)?", "Финансовому директору: есть ли деньги на компенсации и сколько?"] },
+  { n: 5, short: "Интернет-магазин", title: "Интернет-магазин", sub: "Перспективы и актуальные вопросы, запуск через 4 месяца",
+    role: ["Отвечаю за ту часть запуска, которую увидят покупатели: как мы себя подаём, какой контент и откуда придёт трафик. Заодно договариваюсь с дилерами."],
+    tasks: ["Объяснить, зачем покупать у Stels напрямую: цена, гарантия, доставка", "Привести первых покупателей", "Не обидеть дилеров новым каналом продаж", "Состыковать запуск с самокатом, чтобы они не мешали друг другу"],
+    steps: ["Составляю общий план с IT и сбытом: кто что делает и к какой дате", "Определяю предложение магазина: гарантия, доставка, сборка, выдача заказов у дилеров", "Готовлю каталог: фото, видео, описания, отзывы и SEO", "За 6–8 недель до старта открываю лист ожидания (только с согласием на рассылку), анонсирую, привлекаю блогеров", "На старте включаю рекламу, делаю стартовые акции и запускаю программу лояльности", "После запуска смотрю на конверсию, цену привлечения клиента и вопросы в поддержку"],
+    q: ["Директору по информатизации и IT: что из функций будет готово к запуску, как с платежами, аналитикой и CRM, выдержит ли сайт нагрузку?", "Начальнику отдела сбыта: как не поссориться с дилерами из-за цен и можно ли выдавать заказы у них?", "Финансовому директору: сколько денег на запуск и какую выручку ждём?"] },
+  { n: 6, short: "Видео с браком", title: "Видео с браком на YouTube", sub: "Достоверный дефект, более 100 000 просмотров за неделю",
+    role: ["Занимаюсь антикризисным PR. Дефект настоящий, поэтому спорить с роликом нельзя. Признаём, объясняем, что делаем, и делаем."],
+    tasks: ["Ответить первыми, пока недовольство не превратилось в бойкот", "Помочь всем, кто мог купить такую же модель", "Говорить с автором ролика уважительно и без давления", "Переключить разговор с «у них брак» на «они всё исправляют»"],
+    steps: ["Вместе с отделом качества и производством проверяю ролик: модель, партия, связь с отзывом из пункта 2", "Решаем, что делаем: замена, ремонт или отзыв, и кто платит", "Отвечаю под видео и на официальных страницах: спасибо, извините, вот что делаем, вот куда обращаться", "Пишу автору: предлагаю бесплатную замену и экскурсию на завод. Удалить ролик не прошу", "Готовлю комментарий для СМИ, инструктирую поддержку и дилеров", "Через пару недель выпускаю видео о том, как у нас проверяют качество", "Не удаляю комментарии, не заказываю «чёрный» PR и не жалуюсь на ролик"],
+    q: ["Директору по производству: дефект подтверждается? Какие модели и партии затронуты и чем это опасно?", "Генеральному директору: готовы ли мы публично признать проблему и пойти на замену или отзыв?", "Начальнику правового департамента: какие формулировки безопасны в ответе и в разговоре с автором ролика?"] },
+  { n: 7, short: "Эндорсер", title: "Скандал с эндорсером", sub: "Злоупотребление алкоголем и избиение жены, широкое освещение в СМИ",
+    role: ["Отвечаю за то, чтобы бренд не ассоциировался с насилием, и вместе с юристами готовлю решение по контракту."],
+    tasks: ["Отойти в сторону, не изображая суд над человеком", "Убрать рекламу с ним везде, где она ещё крутится", "Сохранить доверие семей и партнёров", "Договориться о правилах выбора новых амбассадоров, чтобы это не повторилось"],
+    steps: ["Проверяю факты по официальным источникам: заявления, заведено ли дело", "С юристами читаю контракт: что сказано о репутации, сроках и штрафах", "Приостанавливаю показ, снимаю материалы с сайта, из соцсетей и магазинов, останавливаю закупку рекламы", "Публикую короткое заявление о ценностях бренда и решении по сотрудничеству, предупреждаю дилеров", "Готовлю ответы для СМИ без оценок личности эндорсера", "Выбираю дальше: кампания без знаменитости (продукт, обычные покупатели) или новый амбассадор после проверки"],
+    q: ["Начальнику правового департамента: что в контракте о репутационных рисках, расторжении и штрафах?", "Директору по маркетингу и финансовому директору: сколько материалов с эндорсером сейчас в эфире и на упаковке и во сколько обойдётся замена?", "Генеральному директору: приостанавливаем контракт или расторгаем?"] },
+  { n: 8, short: "Новая коллекция", title: "Новая коллекция при остатках старой", sub: "Склад и магазины заполнены прошлой коллекцией",
+    role: ["Помогаю рекламой продать остатки и при этом не испортить старт новой коллекции."],
+    tasks: ["Продать старое и освободить склады и полки", "Не обесценить скидками ни новую коллекцию, ни бренд", "Сделать так, чтобы дилерам было выгодно продавать обе", "Состыковать выход новинок с самокатом и интернет-магазином"],
+    steps: ["Раскладываю остатки по моделям, размерам, регионам и «возрасту»", "Выбираю, чем продавать: сезонная распродажа, trade-in, комплекты с аксессуарами, подарки, интернет-магазин и маркетплейсы", "Запускаю честную кампанию «прошлая коллекция по выгодной цене»", "Параллельно открываю предзаказ на новую и рассказываю о её новинках и технологиях", "Готовлю для дилеров материалы: отдельная выкладка, ценники, обучение продавцов", "Новую коллекцию отгружаем по регионам, остатки сверяем каждую неделю"],
+    q: ["Начальнику отдела сбыта: сколько осталось по моделям и регионам и как быстро это продаётся?", "Финансовому директору: ниже какой цены не опускаемся и какой бюджет на распродажу с учётом расходов на хранение?", "Начальнику отдела транспорта и логистики: можно ли придержать новую коллекцию и отгружать её частями?"] },
+  { n: 9, short: "Иск за SMS", title: "Иск из-за SMS-рассылки", sub: "Реклама без согласия получателя (ст. 18 ФЗ «О рекламе»)",
+    role: ["Рассылки делает мой отдел, поэтому я не прячусь: помогаю юристам разобраться и навожу порядок."],
+    tasks: ["Прекратить нарушение сегодня и не допустить повторения", "Снизить юридические и репутационные потери", "Выяснить, есть ли у нас документально подтверждённое согласие", "Установить понятные правила для баз и подрядчиков"],
+    steps: ["В тот же день убираю этот номер из всех рассылок и ставлю в стоп-лист", "Выясняю, откуда номер, кто отправлял и сохранилась ли запись о согласии: форма, дата, журнал", "Вместе с юристами выбираем: мировое соглашение или защита с доказательствами", "Проверяю все базы и рассылки. Вводим двойное подтверждение подписки, простую отписку и журнал согласий", "Пересматриваю договоры с подрядчиками: кто отвечает и можно ли взыскать с них убытки", "Утверждаю регламент и обучаю сотрудников. Он же пригодится для магазина и рассылки об отзыве"],
+    q: ["Начальнику правового департамента: есть ли у нас согласие этого человека и чем грозят штраф и другие иски?", "Директору по информатизации и IT: откуда взяли базу номеров, кто рассылает SMS и где хранятся согласия?", "Директору по маркетингу: какие ещё есть рассылки и подрядчики и для какой части базы нет подтверждённого согласия?"] }
+];
+
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function chev() { return el("span", "chev"); }
+
+function leafList(items) {
+  var ul = el("ul", "kids");
+  items.forEach(function (t) {
+    var li = el("li", "kid leaf");
+    li.appendChild(el("div", "lnode", t));
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function groupItem(label, items) {
+  var li = el("li", "kid group has-kids");
+  var row = el("div", "row has-kids");
+  var b = el("button", "node gnode");
+  b.type = "button";
+  b.setAttribute("aria-expanded", "true");
+  b.appendChild(el("span", null, label));
+  b.appendChild(el("i", null, String(items.length)));
+  b.appendChild(chev());
+  b.addEventListener("click", function () {
+    var closed = li.classList.toggle("is-closed");
+    b.setAttribute("aria-expanded", closed ? "false" : "true");
+  });
+  row.appendChild(b);
+  row.appendChild(leafList(items));
+  li.appendChild(row);
+  return li;
+}
+
+function topicItem(t) {
+  var li = el("li", "kid topic");
+  li.id = "t" + t.n;
+  li.style.setProperty("--c", "var(--c" + t.n + ")");
+  var row = el("div", "row has-kids");
+  var b = el("button", "node tnode");
+  b.type = "button";
+  b.setAttribute("aria-expanded", "true");
+  b.appendChild(el("span", "num", String(t.n)));
+  var tx = el("span", "ttext");
+  tx.appendChild(el("strong", null, t.title));
+  tx.appendChild(el("small", null, t.sub));
+  b.appendChild(tx);
+  b.appendChild(chev());
+  b.addEventListener("click", function () {
+    var closed = li.classList.toggle("is-closed");
+    b.setAttribute("aria-expanded", closed ? "false" : "true");
+  });
+  row.appendChild(b);
+  var kids = el("ul", "kids");
+  kids.appendChild(groupItem("Моя роль", t.role));
+  kids.appendChild(groupItem("Задачи", t.tasks));
+  kids.appendChild(groupItem("Шаги", t.steps));
+  kids.appendChild(groupItem("Вопросы", t.q));
+  row.appendChild(kids);
+  li.appendChild(row);
+  return li;
+}
+
+(function build() {
+  var map = document.getElementById("map");
+  var row = el("div", "row has-kids");
+  var root = el("div", "node rootnode");
+  root.appendChild(el("strong", null, "Отдел рекламы и PR"));
+  root.appendChild(el("span", null, "Начальник отдела. Совещание совета директоров Stels, 9 пунктов повестки"));
+  row.appendChild(root);
+  var kids = el("ul", "kids");
+  DATA.forEach(function (t) { kids.appendChild(topicItem(t)); });
+  row.appendChild(kids);
+  map.appendChild(row);
+
+  var chips = document.getElementById("chips");
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  DATA.forEach(function (t) {
+    var c = el("button", "chip");
+    c.type = "button";
+    c.style.setProperty("--c", "var(--c" + t.n + ")");
+    c.appendChild(el("b", null, String(t.n)));
+    c.appendChild(el("span", null, t.short));
+    c.addEventListener("click", function () {
+      var node = document.getElementById("t" + t.n);
+      node.classList.remove("is-closed");
+      node.querySelector(".tnode").setAttribute("aria-expanded", "true");
+      node.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+    chips.appendChild(c);
+  });
+
+  function setAll(topicsClosed) {
+    document.querySelectorAll(".topic").forEach(function (n) {
+      n.classList.toggle("is-closed", topicsClosed);
+      n.querySelector(".tnode").setAttribute("aria-expanded", topicsClosed ? "false" : "true");
+    });
+    if (!topicsClosed) {
+      document.querySelectorAll(".group").forEach(function (g) {
+        g.classList.remove("is-closed");
+        g.querySelector(".gnode").setAttribute("aria-expanded", "true");
+      });
+    }
+  }
+  document.getElementById("expandAll").addEventListener("click", function () { setAll(false); });
+  document.getElementById("collapseAll").addEventListener("click", function () { setAll(true); });
+})();
+</script>
+</body>
+</html>
